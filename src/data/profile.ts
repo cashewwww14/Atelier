@@ -45,10 +45,14 @@ export const profile = {
         "Orchestrated 7 containers and 4 MySQL databases with Docker Compose on a single bridge network.",
         "Shipped an ERP-integrated CV Analyzer (n8n + Vertex AI) and a survey pipeline for 3,000+ respondents — analysis that took days now takes under an hour.",
       ],
+      certificate: {
+        label: "MAGENTA certificate · Grade A, 95/100",
+        url: "https://drive.google.com/file/d/17wAAoUuiA3PeR6s1OAHaMRTM332KWnx9/view",
+      },
     },
     {
       org: "PT Indosat Tbk",
-      logo: { src: "/logos/indosat.png", w: 333, h: 96, d: 24 },
+      logo: { src: "/logos/indosat-ooredoo-hutchison.png", w: 344, h: 120, d: 36 },
       role: "Technical Operation Intern",
       period: "Oct 2025 — Jan 2026",
       place: "Surabaya",

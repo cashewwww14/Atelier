@@ -98,6 +98,12 @@ export default function AboutPage() {
                       height={job.logo.h}
                       className="w-auto"
                       style={{ height: job.logo.d, width: "auto" }}
+                      // Eager on purpose. These are 2–8KB each, and native
+                      // lazy-loading never fired for them in production:
+                      // Lenis drives scrolling with a transform on a wrapper,
+                      // so the browser never counts them as having entered the
+                      // viewport and the request is simply never made.
+                      loading="eager"
                     />
                   </h2>
                   <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-faint">
@@ -118,6 +124,19 @@ export default function AboutPage() {
                     </li>
                   ))}
                 </ul>
+
+                {/* Only Peruri carries one, hence the guard rather than a field
+                    every entry has to leave empty. */}
+                {"certificate" in job && (
+                  <a
+                    href={job.certificate.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-rule px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted transition-colors hover:border-moss hover:text-moss"
+                  >
+                    {job.certificate.label} <span aria-hidden>↗</span>
+                  </a>
+                )}
               </Reveal>
             ))}
           </ol>
