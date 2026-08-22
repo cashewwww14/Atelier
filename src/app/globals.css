@@ -1,0 +1,208 @@
+@import "tailwindcss";
+
+/*
+  Every colour below is derived from the models themselves.
+
+  `scripts/sample-palette.mjs` clusters each asset's base-colour texture in
+  OKLab; `scripts/derive-palette.mjs` keeps those hues and chroma relationships
+  and re-steps only lightness for a light surface — the oak that reads #7a6d5c
+  in the texture map is the same oak that reads #f2ece4 as a page. Run either
+  script to re-derive after changing assets.
+
+  Contrast is verified, not assumed: ink 15.2:1, body 11.7:1 and muted 5.1:1
+  against the surface, every accent above 7:1.
+*/
+@theme {
+  /* Surfaces — bone ramp */
+  --color-surface: #f9f6f1;
+  --color-paper: #f0ece4;
+  --color-shell: #e3ddd3;
+  --color-edge: #cbc3b5;
+
+  /* Ink — olive ramp */
+  --color-ink: #22200e;
+  --color-body: #36341e;
+  --color-muted: #6d6a4f;
+  --color-faint: #8b876b;
+
+  /* Lichen green — the signpost's moss */
+  --color-moss: #50501d;
+  --color-moss-mid: #898a53;
+  --color-moss-soft: #c6c8a0;
+  --color-moss-wash: #eeefd9;
+
+  /* Timber — workbench oak and tool-handle walnut */
+  --color-oak: #574b3b;
+  --color-oak-mid: #928471;
+  --color-oak-wash: #f2ece4;
+  --color-walnut: #634634;
+  --color-clay: #a07e6a;
+  --color-clay-wash: #f8eae1;
+
+  --color-rule: #d8d3c5;
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
+}
+
+:root {
+  --shell-pad: clamp(1.25rem, 4vw, 4.5rem);
+  color-scheme: light;
+}
+
+* {
+  min-width: 0;
+}
+
+html {
+  background: var(--color-surface);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: transparent;
+  color: var(--color-body);
+  font-family: var(--font-sans);
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+::selection {
+  background: var(--color-moss-soft);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-moss);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+@layer utilities {
+  /* Fraunces tightens its optical size at display scale. */
+  .font-display {
+    font-family: var(--font-display);
+    font-variation-settings: "SOFT" 0, "WONK" 1, "opsz" 40;
+    letter-spacing: -0.022em;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Paper card — the one raised surface in the system. Shadows are warm and
+     shallow; a neutral grey drop shadow on cream reads as dirt. */
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-rule);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 2px rgb(87 75 59 / 0.04),
+      0 8px 24px -12px rgb(87 75 59 / 0.14);
+  }
+
+  .card-raised {
+    box-shadow:
+      0 1px 2px rgb(87 75 59 / 0.05),
+      0 18px 48px -20px rgb(87 75 59 / 0.24);
+  }
+}
+
+/*
+  Drifting leaves.
+
+  One keyframe drives every leaf; direction, distance, sway, spin and depth all
+  arrive as custom properties, so each one travels its own line. Sway and scale
+  are folded into the same track rather than layered as extra animations — two
+  animations on one element would fight over `transform`, and the last one
+  declared simply wins.
+
+  The scale swing is the depth cue: a leaf drifts toward the viewer and away
+  again over its track, which is what stops a flat plane of sprites reading as
+  wallpaper.
+*/
+@keyframes leaf-travel {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(var(--s-from));
+    opacity: 0;
+  }
+  6% {
+    opacity: var(--peak);
+  }
+  25% {
+    transform: translate3d(
+        calc(var(--dx) * 0.25 + var(--sway-x)),
+        calc(var(--dy) * 0.25 + var(--sway-y)),
+        0
+      )
+      rotate(calc(var(--spin) * 0.25))
+      scale(calc((var(--s-from) + var(--s-mid)) / 2));
+  }
+  50% {
+    transform: translate3d(
+        calc(var(--dx) * 0.5 - var(--sway-x)),
+        calc(var(--dy) * 0.5 - var(--sway-y)),
+        0
+      )
+      rotate(calc(var(--spin) * 0.5))
+      scale(var(--s-mid));
+  }
+  75% {
+    transform: translate3d(
+        calc(var(--dx) * 0.75 + var(--sway-x)),
+        calc(var(--dy) * 0.75 + var(--sway-y)),
+        0
+      )
+      rotate(calc(var(--spin) * 0.75))
+      scale(calc((var(--s-mid) + var(--s-to)) / 2));
+  }
+  94% {
+    opacity: var(--peak);
+  }
+  100% {
+    transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--spin))
+      scale(var(--s-to));
+    opacity: 0;
+  }
+}
+
+/* Three bars, only while sound is actually coming out. */
+@keyframes equaliser {
+  0%,
+  100% {
+    height: 5px;
+  }
+  50% {
+    height: 13px;
+  }
+}
+
+/* A slow rise-and-settle, used for the figure so it never looks pasted on. */
+@keyframes figure-breathe {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

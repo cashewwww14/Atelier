@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+build/
+
+# Credentials — the Apple Music .p8 key must never be committed.
+.env
+.env.local
+.env*.local
+*.p8
+
+.DS_Store
+*.pem
+next-env.d.ts
+
+# TypeScript incremental build cache — machine-local, not source.
+*.tsbuildinfo
