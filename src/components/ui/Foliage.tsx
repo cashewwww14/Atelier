@@ -11,14 +11,22 @@ import { useReducedMotion } from "@/lib/env";
  * tied here to the site's own motif. Pure SVG and CSS transforms, so it
  * composites on the GPU and costs nothing beside the WebGL canvas.
  *
- * The outlines are generated rather than drawn. A leaf is a blade envelope
- * (wide at the base, tapering to a tip) modulated by a lobe wave, so one
- * function covers maple, oak and plain ovate depending on three numbers — and
- * every leaf on screen gets its own. Hand-drawn paths gave three shapes that
- * repeated visibly; this gives as many as there are leaves.
+ * The outlines are generated rather than drawn, so no two leaves repeat. There
+ * are two builders because there are two kinds of leaf, and one function
+ * cannot make both:
  *
- * Nothing here aims at botanical accuracy. It is an illustration: readable
- * silhouette, midrib, side veins, and that is enough at these sizes.
+ *   `buildMaple`  palmate — five lobes radiating from the petiole, deep
+ *                 sinuses between them, veins fanning out from the same point
+ *   `buildBlade`  pinnate — one midrib with a toothed blade either side
+ *
+ * An earlier pass tried to get a maple out of the pinnate builder by running a
+ * lobe wave along the midrib. It cannot work: a maple's lobes all spring from
+ * one point at the base, they do not march up the spine. Waving the width of a
+ * spine-based blade five times produces something closer to a fir frond, which
+ * is exactly how it looked.
+ *
+ * Nothing here aims at botanical accuracy. It is illustration: a readable
+ * silhouette, a toothed margin, veins that go where the lobes are.
  */
 
 interface LeafGeometry {
@@ -26,59 +34,158 @@ interface LeafGeometry {
   veins: string;
 }
 
-/**
- * Build one leaf outline on a 48×48 grid, base at the bottom, tip at the top.
- *
- * @param lobes      number of lobe pairs — 0 reads as a plain leaf, 5 as maple
- * @param lobeDepth  how deeply the lobes cut in, 0..0.6
- * @param taper      tip sharpness; higher is a narrower point
- * @param width      half-width of the blade at its widest, in viewBox units
- */
-function buildLeaf(lobes: number, lobeDepth: number, taper: number, width: number): LeafGeometry {
-  const STEPS = 54;
-  const AXIS_X = 24;
-  const BASE_Y = 42;
-  const LENGTH = 36;
+/** Polar around the petiole junction. Angle 0 points straight up the leaf. */
+function polar(cx: number, cy: number, angle: number, radius: number): [number, number] {
+  return [cx + radius * Math.sin(angle), cy - radius * Math.cos(angle)];
+}
 
-  /** Half-width of the blade at position t along the midrib (0 base, 1 tip). */
-  const halfWidth = (t: number) => {
-    // Envelope: widest a little below centre, then runs out at the tip.
-    // The exponent places that widest point — 0.58 put it at t≈0.3, which made
-    // every leaf bottom-heavy and slightly gourd-shaped.
-    const envelope = Math.sin(Math.PI * Math.pow(t, 0.82)) ** taper;
-    // Lobes ride on top of it; cos keeps a notch at the base of each pair.
-    const lobe = 1 - lobeDepth * (0.5 - 0.5 * Math.cos(2 * Math.PI * lobes * t));
-    return envelope * lobe * width;
-  };
+/**
+ * Triangular teeth for a margin, as a function of position along an edge.
+ *
+ * Maple and birch margins are serrated, and at these sizes the teeth are most
+ * of what separates a leaf from a paper cut-out.
+ */
+function tooth(u: number, count: number, depth: number) {
+  return depth * (1 - 2 * Math.abs(((u * count) % 1) - 0.5));
+}
+
+const AXIS_X = 24;
+const BASE_Y = 41;
+
+/**
+ * A dry maple leaf, built palmately.
+ *
+ * Control points alternate lobe tip and sinus around the fan; each pair is
+ * interpolated separately, which leaves a corner at every tip and every notch.
+ * That is the point — smoothing across them rounds a maple into a fig.
+ */
+function buildMaple(rand: () => number): LeafGeometry {
+  const R = 31;
+  /** Per-side, so the two halves never mirror each other exactly. */
+  const vary = () => 1 + (rand() - 0.5) * 0.13;
+
+  // Angles measured from straight up: centre lobe, upper pair, basal pair.
+  // The basal pair sits near 1.7rad; pushed out to 1.95 it splayed sideways
+  // and the leaf read as a hand.
+  const lobeAngle = [0, 0.86 + rand() * 0.1, 1.68 + rand() * 0.13];
+  const lobeLen = [1, 0.9, 0.68];
+  // Sinuses stay shallow. At 0.3 the blade between lobes all but vanishes and
+  // what is left are five fingers on a stalk — the single thing that made the
+  // earlier shape read as anything but a maple.
+  const sinusAngle = [0.53, 1.34];
+  const sinusLen = [0.46 + rand() * 0.05, 0.41 + rand() * 0.05];
+  const skirt = 2.45;
+
+  // Around the fan: base, up the left side, over the centre, down the right.
+  const control: [number, number][] = [
+    [-skirt, 0.15],
+    [-lobeAngle[2], lobeLen[2] * vary()],
+    [-sinusAngle[1], sinusLen[1]],
+    [-lobeAngle[1], lobeLen[1] * vary()],
+    [-sinusAngle[0], sinusLen[0]],
+    [0, lobeLen[0] * vary()],
+    [sinusAngle[0], sinusLen[0]],
+    [lobeAngle[1], lobeLen[1] * vary()],
+    [sinusAngle[1], sinusLen[1]],
+    [lobeAngle[2], lobeLen[2] * vary()],
+    [skirt, 0.15],
+  ];
+
+  const teeth = 2 + Math.floor(rand() * 2);
+  const depth = 0.02 + rand() * 0.015;
+  const points: string[] = [];
+
+  for (let i = 0; i < control.length - 1; i++) {
+    const [a0, r0] = control[i];
+    const [a1, r1] = control[i + 1];
+    const steps = 9;
+    // The base skirt has no teeth; a serrated stem socket reads as damage.
+    const edge = i === 0 || i === control.length - 2 ? 0 : depth;
+
+    for (let j = 0; j < steps; j++) {
+      const u = j / steps;
+      // Linear, deliberately. Easing the radius flattens it as it approaches
+      // a lobe tip, which rounds the point off into a finger; straight in
+      // polar space gives a tapering lobe that ends in an actual corner.
+      const angle = a0 + (a1 - a0) * u;
+      const radius = (r0 + (r1 - r0) * u + tooth(u, teeth, edge)) * R;
+      const [x, y] = polar(AXIS_X, BASE_Y, angle, radius);
+      points.push(`${x.toFixed(2)},${y.toFixed(2)}`);
+    }
+  }
+
+  const blade = `M${points.join(" L")} Z`;
+
+  // Palmate venation: one vein per lobe, all from the petiole junction. This
+  // is the single strongest signal that the shape is a maple.
+  const veins = [`M${AXIS_X} ${(BASE_Y + 5.5).toFixed(2)} V${BASE_Y.toFixed(2)}`];
+  for (const [i, angle] of [-lobeAngle[2], -lobeAngle[1], 0, lobeAngle[1], lobeAngle[2]].entries()) {
+    const reach = lobeLen[[2, 1, 0, 1, 2][i]] * R * 0.78;
+    const [x, y] = polar(AXIS_X, BASE_Y, angle, reach);
+    veins.push(`M${AXIS_X} ${BASE_Y.toFixed(2)} L${x.toFixed(2)} ${y.toFixed(2)}`);
+  }
+
+  return { blade, veins: veins.join("") };
+}
+
+/**
+ * The plain broadleaf: one midrib, a toothed blade either side.
+ *
+ * `bend` curves the whole spine. A perfectly straight leaf reads as a template;
+ * a dry one has always curled a little one way.
+ */
+function buildBlade(rand: () => number): LeafGeometry {
+  const STEPS = 60;
+  const LENGTH = 33;
+  const width = 8 + rand() * 4.5;
+  const taper = 1 + rand() * 0.85;
+  const bend = (rand() - 0.5) * 6;
+  const teeth = 7 + Math.floor(rand() * 6);
+  const depth = 0.42 + rand() * 0.5;
+
+  const axisAt = (t: number) => AXIS_X + bend * Math.sin(Math.PI * t * 0.8);
+  const halfWidth = (t: number) => Math.sin(Math.PI * Math.pow(t, 0.82)) ** taper * width;
 
   const right: string[] = [];
   const left: string[] = [];
 
   for (let i = 0; i <= STEPS; i++) {
     const t = i / STEPS;
-    const w = halfWidth(t);
-    const y = (BASE_Y - t * LENGTH).toFixed(2);
-    right.push(`${(AXIS_X + w).toFixed(2)},${y}`);
-    left.push(`${(AXIS_X - w).toFixed(2)},${y}`);
+    // Teeth swell in the middle, vanish at both ends, and are never allowed
+    // to exceed a third of the blade they sit on. Fading them by position
+    // alone still frayed the apex: near the tip a fixed-depth tooth is wider
+    // than what is left of the leaf.
+    const hw = halfWidth(t);
+    const w = hw + Math.min(tooth(t, teeth, depth) * Math.sin(Math.PI * t), hw * 0.34);
+    const x = axisAt(t);
+    const y = BASE_Y - t * LENGTH;
+    right.push(`${(x + w).toFixed(2)},${y.toFixed(2)}`);
+    left.push(`${(x - w).toFixed(2)},${y.toFixed(2)}`);
   }
 
   const blade = `M${right.join(" L")} L${left.reverse().join(" L")} Z`;
 
-  // Midrib runs the whole length, through the stem. Side veins reach for the
-  // widest point of each lobe, which is what makes the lobes read as lobes.
-  const veinCount = Math.max(3, Math.round(lobes) * 2 || 5);
-  // The midrib stops short of the tip. Running it the full length left a
-  // hairline spiking out past the point, where the blade has no width left to
-  // cover it.
-  const veins = [`M${AXIS_X} 47 V${(BASE_Y - LENGTH * 0.93).toFixed(2)}`];
-  for (let i = 1; i <= veinCount; i++) {
-    const t = i / (veinCount + 1);
-    const w = halfWidth(t) * 0.82;
+  // Midrib plus the petiole below it, stopping short of the tip — run it the
+  // whole length and a hairline spikes out past the point.
+  const rib: string[] = [`M${AXIS_X} ${(BASE_Y + 5.5).toFixed(2)}`];
+  for (let i = 0; i <= 12; i++) {
+    const t = (i / 12) * 0.93;
+    rib.push(`L${axisAt(t).toFixed(2)} ${(BASE_Y - t * LENGTH).toFixed(2)}`);
+  }
+  const veins = [rib.join(" ")];
+
+  for (let i = 1; i <= 6; i++) {
+    const t = i / 7;
+    // A vein angles upward as it goes out, so it must be measured against the
+    // blade at the height it ends at, not the one it started from — sized on
+    // the origin it punched straight through the margin near the tip.
+    const w = Math.min(halfWidth(t), halfWidth(t + 0.06)) * 0.78;
+    const x = axisAt(t);
     const y = BASE_Y - t * LENGTH;
     // Angled toward the tip, the way veins actually leave a midrib.
-    const yTo = y - LENGTH * 0.055;
-    veins.push(`M${AXIS_X} ${y.toFixed(2)} L${(AXIS_X + w).toFixed(2)} ${yTo.toFixed(2)}`);
-    veins.push(`M${AXIS_X} ${y.toFixed(2)} L${(AXIS_X - w).toFixed(2)} ${yTo.toFixed(2)}`);
+    const yTo = (y - LENGTH * 0.06).toFixed(2);
+    veins.push(`M${x.toFixed(2)} ${y.toFixed(2)} L${(x + w).toFixed(2)} ${yTo}`);
+    veins.push(`M${x.toFixed(2)} ${y.toFixed(2)} L${(x - w).toFixed(2)} ${yTo}`);
   }
 
   return { blade, veins: veins.join("") };
@@ -134,7 +241,7 @@ function Leaf({ geometry, size }: { geometry: LeafGeometry; size: number }) {
   );
 }
 
-export function Foliage({ count = 26, seed = 0x1eaf }: { count?: number; seed?: number }) {
+export function Foliage({ count = 34, seed = 0x1eaf }: { count?: number; seed?: number }) {
   const reduced = useReducedMotion();
 
   const leaves = useMemo<Drifter[]>(() => {
@@ -163,24 +270,19 @@ export function Foliage({ count = 26, seed = 0x1eaf }: { count?: number; seed?: 
       const far = 0.45 + rand() * 0.3;
       const startNear = rand() > 0.5;
 
-      // 5 lobe pairs read as a fir rather than a broadleaf, so the set stops
-      // at 3: plain, gently waved, and oak-ish.
-      const lobes = [0, 0, 2, 2, 3][Math.floor(rand() * 5)];
-      const geometry = buildLeaf(
-        lobes,
-        lobes === 0 ? 0 : 0.18 + rand() * 0.24,
-        1.1 + rand() * 1.3,
-        // Viewbox units, not a fraction. Passing 0.4 here made a blade 1.4
-        // units wide inside a 48-unit box, which drew as a hairline.
-        7.5 + rand() * 5,
-      );
+      // Maple-led, with plain broadleaves for contrast. A screen of nothing
+      // but maples reads as a pattern; they need something to be distinct
+      // against, and the two silhouettes at different sizes do that.
+      const isMaple = rand() < 0.62;
+      const geometry = isMaple ? buildMaple(rand) : buildBlade(rand);
 
       return {
         // Start anywhere, well outside the frame included, so leaves enter from
         // every edge instead of raining from the top.
         left: rand() * 150 - 25,
         top: rand() * 150 - 25,
-        size: 34 + rand() * 76,
+        // Maples carry more detail, so they need the size to show it.
+        size: (isMaple ? 46 : 34) + rand() * 74,
         // Very long, heavily staggered cycles. Between this and the distance,
         // no two leaves are ever at a comparable point in their track.
         delay: -rand() * 140,
@@ -198,7 +300,7 @@ export function Foliage({ count = 26, seed = 0x1eaf }: { count?: number; seed?: 
         // Faint enough to stay behind the content, solid enough that the
         // veins and lobes actually read — below about 0.2 the detail is there
         // in the markup and invisible on screen.
-        opacity: 0.26 + rand() * 0.26,
+        opacity: 0.3 + rand() * 0.28,
       };
     });
   }, [count, seed]);

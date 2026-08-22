@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { HUB } from "@/data/hub";
 import { useScene } from "@/lib/scene-state";
 
@@ -16,8 +16,21 @@ const HubScene = dynamic(() => import("./HubScene").then((m) => m.HubScene), { s
  * change above it.
  */
 export function SceneRoot() {
-  const { focused, leaving, arrivedAt, enter } = useScene();
+  const { focused, leaving, arrivedAt, enter, prefetch } = useScene();
   const [hovered, setHovered] = useState<string | null>(null);
+
+  // Warm the route the moment the pointer lands on its object. The exit
+  // animation gives the fetch a 950ms head start either way, but a route
+  // already in cache means the object never has to hang in the middle of the
+  // frame waiting for a page.
+  const onHoverChange = useCallback(
+    (id: string | null) => {
+      setHovered(id);
+      const item = id ? HUB.find((o) => o.id === id) : undefined;
+      if (item) prefetch(item.href);
+    },
+    [prefetch],
+  );
 
   return (
     <div className="pointer-events-none fixed inset-0 z-0">
@@ -38,7 +51,7 @@ export function SceneRoot() {
       >
         <HubScene
           hovered={hovered}
-          onHoverChange={setHovered}
+          onHoverChange={onHoverChange}
           onActivate={(item) => enter(item.id, item.href)}
           focused={focused}
           leaving={leaving}

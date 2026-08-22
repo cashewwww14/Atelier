@@ -6,7 +6,7 @@ import { useGLTF } from "@react-three/drei";
 import type { Group, Mesh, MeshStandardMaterial } from "three";
 import { MathUtils } from "three";
 import { FOCUS_POSE, type HubObject } from "@/data/hub";
-import { SETTLE_MS } from "@/lib/scene-state";
+import { GLIDE_MS, SETTLE_MS } from "@/lib/scene-state";
 import { useFitted } from "./Fit";
 
 interface Pose {
@@ -21,7 +21,37 @@ interface Pose {
   spin: number;
 }
 
-type Phase = "hub" | "diving" | "swept" | "centred" | "focused" | "dismissed";
+/** What the object is doing. `arriving` covers the whole retreat, continuously. */
+type Phase = "hub" | "diving" | "swept" | "arriving" | "dismissed";
+
+/** The named poses themselves, including the two ends of the retreat. */
+type PoseKey = "hub" | "diving" | "swept" | "centred" | "focused" | "dismissed";
+
+const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
+
+/**
+ * Smoothstep: zero gradient at both ends.
+ *
+ * That property is the entire fix for the kink. Damping toward a target that
+ * jumps produces a sudden change of velocity, which the eye reads as the path
+ * breaking. Easing the *target* between two poses instead means it leaves one
+ * and reaches the other at a standstill, so there is no instant where speed
+ * changes discontinuously.
+ */
+const ease = (t: number) => t * t * (3 - 2 * t);
+
+/** One pose eased into another. Opacity gets its own clock; see below. */
+function mixPose(a: Pose, b: Pose, t: number, fade: number): Pose {
+  return {
+    x: MathUtils.lerp(a.x, b.x, t),
+    y: MathUtils.lerp(a.y, b.y, t),
+    z: MathUtils.lerp(a.z, b.z, t),
+    scale: MathUtils.lerp(a.scale, b.scale, t),
+    opacity: MathUtils.lerp(a.opacity, b.opacity, fade),
+    lambda: MathUtils.lerp(a.lambda, b.lambda, t),
+    spin: MathUtils.lerp(a.spin, b.spin, t),
+  };
+}
 
 /**
  * Where an object belongs right now, given what the page is doing.
@@ -31,7 +61,7 @@ type Phase = "hub" | "diving" | "swept" | "centred" | "focused" | "dismissed";
  * side by side is what makes the motion legible.
  */
 function poseFor(
-  phase: Phase,
+  phase: PoseKey,
   item: HubObject,
   compact: boolean,
   halfW: number,
@@ -67,15 +97,17 @@ function poseFor(
         spin: 0,
       };
     case "centred":
-      // Just arrived. Still where the dive left it, holding the middle for a
-      // beat before it retreats and becomes scenery.
+      // Exactly where the dive left it — z 6.96 and ×2.35 after 950ms of
+      // damping toward 7.6 at λ2.6. Naming anything nearer made the object
+      // rush the camera and then reverse back into the frame, a fold in the
+      // path that read as the animation snapping.
       return {
         x: 0,
         y: 0,
-        z: 4.2,
-        scale: rest.scale * viewportHeight * 1.9,
-        opacity: 0.9,
-        lambda: 3.4,
+        z: 7.0,
+        scale: rest.scale * viewportHeight * 2.35,
+        opacity: 1,
+        lambda: 3.0,
         spin: 5.5,
       };
     case "focused":
@@ -215,21 +247,41 @@ export function HubItem({
     const dt = Math.min(delta, 1 / 30);
     const t = clock.elapsedTime;
 
-    const settling = performance.now() - arrivedAt.current < SETTLE_MS;
     const someoneLeaving = leaving !== null;
     const phase: Phase = isLeaving
       ? "diving"
       : someoneLeaving
         ? "swept"
         : isFocused
-          ? settling
-            ? "centred"
-            : "focused"
+          ? "arriving"
           : isDismissed
             ? "dismissed"
             : "hub";
 
-    const pose = poseFor(phase, item, compact, viewport.width / 2, viewport.height / 2, viewport.height);
+    const halfW = viewport.width / 2;
+    const halfH = viewport.height / 2;
+
+    // How far through the retreat this object is: it holds the middle of the
+    // frame for SETTLE_MS, then eases out to its parked pose over GLIDE_MS.
+    // Off the arriving phase this is meaningless, hence the gate below.
+    const elapsed = performance.now() - arrivedAt.current;
+    const glide = ease(clamp01((elapsed - SETTLE_MS) / GLIDE_MS));
+    // Opacity runs on its own, earlier clock. The object is at full size and
+    // full strength when the page mounts, and the text under it has to become
+    // readable well before the object has finished travelling — but fading and
+    // moving on the same curve would leave it opaque over the copy for most of
+    // the journey.
+    const fade = ease(clamp01(elapsed / (SETTLE_MS + GLIDE_MS * 0.45)));
+
+    const pose =
+      phase === "arriving"
+        ? mixPose(
+            poseFor("centred", item, compact, halfW, halfH, viewport.height),
+            poseFor("focused", item, compact, halfW, halfH, viewport.height),
+            glide,
+            fade,
+          )
+        : poseFor(phase, item, compact, halfW, halfH, viewport.height);
 
     // On the hub the object breathes and answers the pointer; in every other
     // phase it is travelling and those idle motions would fight the journey.
@@ -275,7 +327,9 @@ export function HubItem({
         (idle ? Math.sin(t * 0.22 + phaseOffset) * 0.06 : 0) +
         // Parked scenery turns with the page: a full revolution per 2400px,
         // slow enough to read as the object being circled rather than spun.
-        (phase === "focused" ? (window.scrollY / 2400) * Math.PI * 2 : 0),
+        // Weighted by the retreat so it eases in with everything else instead
+        // of switching on the moment the object finishes parking.
+        (phase === "arriving" ? (window.scrollY / 2400) * Math.PI * 2 * glide : 0),
       pose.lambda * 0.8,
       dt,
     );

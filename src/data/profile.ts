@@ -22,18 +22,30 @@ export const profile = {
 
   experience: [
     {
-      org: "Perum Peruri (Persero)",
-      role: "IT Infrastructure Developer Intern",
-      period: "Jan 2026 — present",
-      place: "Jakarta",
+      org: "Alcon",
+      role: "Data Analyst, MS&T",
+      period: "Jul — Sep 2026",
+      place: "Batam",
       points: [
+        "Re-architected the Tableau reporting for Material Engineering: variance, savings and vendor analytics.",
+        "Rebuilt each board around the question it is meant to answer rather than the table it grew out of.",
+      ],
+    },
+    {
+      org: "Perum Peruri (Persero)",
+      role: "Information Technology Developer",
+      period: "Jan — Jul 2026",
+      place: "South Jakarta",
+      points: [
+        "Digitised administrative workflows end to end: ETL pipelines, AI APIs for automation, and the web applications on top of them.",
+        "Worked directly with Business Process Owners — most of the job was listening, then turning what they described into something buildable.",
         "Built a Turborepo monorepo pipeline across a full-stack Next.js and Laravel architecture.",
         "Orchestrated 7 containers and 4 MySQL databases with Docker Compose on a single bridge network.",
         "Shipped an ERP-integrated CV Analyzer (n8n + Vertex AI) and a survey pipeline for 3,000+ respondents — analysis that took days now takes under an hour.",
       ],
     },
     {
-      org: "Indosat Ooredoo Hutchison",
+      org: "PT Indosat Tbk",
       role: "Technical Operation Intern",
       period: "Oct 2025 — Jan 2026",
       place: "Surabaya",
@@ -75,9 +87,63 @@ export const profile = {
       period: "Feb — Apr 2025",
       desc: "Built an Indonesian sentiment-analysis model and a CNN brain-tumour classifier on medical imaging.",
     },
+    {
+      org: "Schematics — REEVA",
+      role: "Food & Beverage Volunteer",
+      period: "Oct 2023",
+      desc: "Ran the bazaar floor for ITS's public expo and concert — vendor coordination, opening and closing, and keeping it running through the event.",
+    },
+    {
+      org: "ALBACADABRA",
+      role: "Creative Webinar",
+      period: "Sep — Oct 2022",
+      desc: "Set the themes and booked the speakers for a national student webinar, landing Deddy Mizwar and Sherly Annavita Rahmi with the Schoters team.",
+    },
+    {
+      org: "ALBACADABRA",
+      role: "Competition Crew",
+      period: "Sep 2021",
+      desc: "Refereed, drew up the rundown and match-ups, and prepared the arena.",
+    },
+    {
+      org: "DYNAMICS",
+      role: "Bazaar Supervisor",
+      period: "Nov 2019",
+      desc: "Coordinated vendors and oversaw the bazaar at a student leadership event.",
+    },
+  ],
+
+  /**
+   * Two write-ups from the internships, kept as links out rather than
+   * reproduced — the posts live on LinkedIn and belong there.
+   */
+  posts: [
+    {
+      org: "Peruri",
+      title: "Every project is more than just writing code",
+      excerpt:
+        "Working with Business Process Owners was the lesson. Listen carefully, gather the feedback, negotiate, and translate a business requirement into something that can actually be built.",
+      date: "Aug 2026",
+      reactions: 12,
+      url: "https://www.linkedin.com/feed/update/urn:li:activity:7488803225312079872/",
+    },
+    {
+      org: "PT Indosat Tbk",
+      title: "Nobody tells you this about internships",
+      excerpt:
+        "Three months across Technical Operation, where precision keeps millions connected, and Marketing Communication, where the technology becomes a story. Skills fade if you stop using them; relationships compound.",
+      date: "Jan 2026",
+      reactions: 12,
+      comments: 2,
+      url: "https://www.linkedin.com/feed/update/urn:li:activity:7412654221012951040/",
+    },
   ],
 
   certifications: [
+    {
+      name: "MAGENTA Internship — Grade A, 95/100",
+      issuer: "Perum Peruri · cert. 00220/MAGENTA/20/8/26",
+    },
     { name: "Python, C++, IoT Development with ESP32", issuer: "Skilvul" },
     { name: "Samsung Innovation Campus", issuer: "PT Samsung Electronics Indonesia" },
   ],

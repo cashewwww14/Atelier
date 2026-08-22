@@ -45,12 +45,17 @@ interface SceneState {
   arrivedAt: RefObject<number>;
   /** Fly an object off the frame, then navigate. */
   enter: (id: string, href: string) => void;
+  /** Warm a route while the pointer is on its object, before any click. */
+  prefetch: (href: string) => void;
   /** True on the hub, where the labels and name belong. */
   onHub: boolean;
 }
 
-/** Beat of stillness after arrival, before the object swings back in. */
-export const SETTLE_MS = 520;
+/** Beat of stillness after arrival, before the object starts to retreat. */
+export const SETTLE_MS = 380;
+
+/** How long the retreat from the middle of the frame to the parked pose takes. */
+export const GLIDE_MS = 1250;
 
 const Context = createContext<SceneState | null>(null);
 
@@ -70,23 +75,34 @@ export function SceneProvider({ children }: { children: ReactNode }) {
       setLeaving(id);
       // Navigate only once the object has visibly left, so the page does not
       // cut in over a still frame.
-      exitTimer.current = window.setTimeout(() => {
-        router.push(href);
-        // Cleared here rather than in a pathname effect: this handler is what
-        // set it, so this is where it belongs, and it keeps navigation from
-        // costing an extra render pass.
-        setLeaving(null);
-      }, EXIT_MS);
+      exitTimer.current = window.setTimeout(() => router.push(href), EXIT_MS);
     },
     [router],
   );
 
   // On arrival, stamp the clock. The scene compares against it each frame to
-  // decide whether the object is still waiting off-stage. Writing a ref is not
-  // a render, which is the whole point of doing it this way.
+  // decide how far along the retreat is. Writing a ref is not a render, which
+  // is the whole point of doing it this way.
+  //
+  // `leaving` is cleared *here*, not on the exit timer, and the difference is
+  // the whole transition. `router.push` resolves asynchronously: clearing on
+  // the timer opened a window where nothing was leaving and the pathname had
+  // not changed yet, so every object fell back to its hub pose and the one
+  // just clicked flew home again before its section appeared. The gap is
+  // invisible against a warm dev server and plainly visible over a network.
   useEffect(() => {
     arrivedAt.current = performance.now();
+    // The router is the external system this effect synchronises against, and
+    // a route landing is an event from it — exactly the case the rule cannot
+    // see. It costs one render per navigation, at the only moment the answer
+    // can be known.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLeaving(null);
   }, [pathname]);
+
+  // Hovering an object is a good bet that it is about to be clicked, and a
+  // route already in the cache changes hands in a frame or two.
+  const prefetch = useCallback((href: string) => router.prefetch(href), [router]);
 
   const value = useMemo<SceneState>(
     () => ({
@@ -94,9 +110,10 @@ export function SceneProvider({ children }: { children: ReactNode }) {
       leaving,
       arrivedAt,
       enter,
+      prefetch,
       onHub: pathname === "/",
     }),
-    [pathname, leaving, enter],
+    [pathname, leaving, enter, prefetch],
   );
 
   return <Context.Provider value={value}>{children}</Context.Provider>;

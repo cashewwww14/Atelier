@@ -115,14 +115,55 @@ export default function AboutPage() {
                 Volunteer
               </p>
               <ul className="mt-5 space-y-5">
+                {/* Keyed on org *and* period — two of these share an organiser. */}
                 {profile.volunteer.map((v) => (
-                  <li key={v.org}>
+                  <li key={`${v.org}-${v.period}`}>
                     <p className="text-[15px] text-ink">
                       {v.org} <span className="text-faint">· {v.period}</span>
                     </p>
+                    <p className="mt-0.5 text-[13px] text-moss">{v.role}</p>
                     <p className="mt-1 max-w-[52ch] text-[13.5px] leading-relaxed text-muted">
                       {v.desc}
                     </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.26}>
+            <div className="mt-10 border-t border-rule pt-8">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-faint">
+                Written elsewhere
+              </p>
+              <ul className="mt-5 space-y-3">
+                {profile.posts.map((post) => (
+                  <li key={post.url}>
+                    <a
+                      href={post.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group block rounded-xl border border-rule p-5 transition-colors hover:border-moss"
+                    >
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-moss">
+                          {post.org}
+                        </span>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
+                          {post.date} · {post.reactions} reactions
+                          {"comments" in post ? ` · ${post.comments} comments` : ""}
+                        </span>
+                      </div>
+                      <p className="mt-2 font-display text-[1.15rem] leading-snug text-ink">
+                        {post.title}
+                      </p>
+                      <p className="mt-2 max-w-[58ch] text-[13.5px] leading-relaxed text-muted">
+                        {post.excerpt}
+                      </p>
+                      <span className="mt-3 inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-faint transition-colors group-hover:text-moss">
+                        Read on LinkedIn <span aria-hidden>↗</span>
+                      </span>
+                    </a>
                   </li>
                 ))}
               </ul>
