@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageShell } from "@/components/PageShell";
+import Image from "next/image";
 import { Reveal } from "@/components/ui/Reveal";
 import { profile } from "@/data/profile";
 
@@ -85,8 +86,20 @@ export default function AboutPage() {
                   }}
                 />
 
-                <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-                  <h2 className="font-display text-[1.3rem] text-ink">{job.org}</h2>
+                <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+                  {/* The logo carries the name, so printing both would say it
+                      twice. The heading keeps the text for semantics and
+                      screen readers; the mark is what you actually see. */}
+                  <h2 className="font-display text-[1.3rem] text-ink">
+                    <Image
+                      src={job.logo.src}
+                      alt={job.org}
+                      width={job.logo.w}
+                      height={job.logo.h}
+                      className="w-auto"
+                      style={{ height: job.logo.d, width: "auto" }}
+                    />
+                  </h2>
                   <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-faint">
                     {job.period}
                   </span>

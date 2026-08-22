@@ -11,7 +11,7 @@ export const profile = {
   education: {
     school: "Institut Teknologi Sepuluh Nopember",
     degree: "BSc Informatics Engineering",
-    gpa: "3.67 / 4.00",
+    gpa: "3.70 / 4.00",
     period: "Aug 2023 — Aug 2027",
   },
 
@@ -23,6 +23,7 @@ export const profile = {
   experience: [
     {
       org: "Alcon",
+      logo: { src: "/logos/alcon.png", w: 351, h: 96, d: 21 },
       role: "Data Analyst, MS&T",
       period: "Jul — Sep 2026",
       place: "Batam",
@@ -33,6 +34,7 @@ export const profile = {
     },
     {
       org: "Perum Peruri (Persero)",
+      logo: { src: "/logos/peruri.png", w: 280, h: 96, d: 34 },
       role: "Information Technology Developer",
       period: "Jan — Jul 2026",
       place: "South Jakarta",
@@ -46,6 +48,7 @@ export const profile = {
     },
     {
       org: "PT Indosat Tbk",
+      logo: { src: "/logos/indosat.png", w: 333, h: 96, d: 24 },
       role: "Technical Operation Intern",
       period: "Oct 2025 — Jan 2026",
       place: "Surabaya",
@@ -57,6 +60,7 @@ export const profile = {
     },
     {
       org: "Target Media Nusantara",
+      logo: { src: "/logos/target-media.png", w: 423, h: 64, d: 18 },
       role: "Content Operator",
       period: "Jun — Jul 2025",
       place: "Surabaya",
