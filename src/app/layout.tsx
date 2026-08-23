@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { EB_Garamond, Inter, Karla } from "next/font/google";
 import { SceneRoot } from "@/components/canvas/SceneRoot";
 import { Foliage } from "@/components/ui/Foliage";
 import { NowPlaying } from "@/components/ui/NowPlaying";
@@ -7,11 +7,21 @@ import { SceneProvider } from "@/lib/scene-state";
 import { profile } from "@/data/profile";
 import "./globals.css";
 
-const fraunces = Fraunces({
+// Old-world and bookish, to sit with marble, carved wood and paper. Fraunces
+// was the previous display face; its wobble read as playful rather than made.
+const garamond = EB_Garamond({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  variable: "--font-garamond",
   display: "swap",
-  axes: ["SOFT", "WONK", "opsz"],
+});
+
+// Warmer than Inter in the body, with a little grotesque character. Inter
+// stays loaded because the app mockups are reconstructions and their own
+// interfaces are what makes them convincing.
+const karla = Karla({
+  subsets: ["latin"],
+  variable: "--font-karla",
+  display: "swap",
 });
 
 const inter = Inter({
@@ -38,7 +48,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
+    <html lang="en" className={`${garamond.variable} ${inter.variable} ${karla.variable}`}>
       <body className="antialiased">
         {/* The scene and the drifting leaves are mounted once, above the root
             background and beneath every page. Navigation changes only what is

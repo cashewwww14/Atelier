@@ -95,7 +95,7 @@ export function NewsPortalMockup() {
         style={{ borderBottom: `1px solid ${INK.line}` }}
       >
         <button onClick={() => setReading(null)} className="text-left">
-          <p className="text-[26px] font-bold leading-none tracking-tight" style={{ fontFamily: "var(--font-fraunces)" }}>
+          <p className="text-[26px] font-bold leading-none tracking-tight" style={{ fontFamily: "var(--font-garamond)" }}>
             The Daily Word
           </p>
           <p className="mt-1.5 text-[10.5px] uppercase tracking-[0.18em]" style={{ color: INK.faint }}>
@@ -125,7 +125,7 @@ export function NewsPortalMockup() {
               <Chip>{reading.cat}</Chip>
               <h2
                 className="mt-3 text-[30px] font-bold leading-[1.14] tracking-tight"
-                style={{ fontFamily: "var(--font-fraunces)" }}
+                style={{ fontFamily: "var(--font-garamond)" }}
               >
                 {reading.title}
               </h2>
@@ -150,7 +150,7 @@ export function NewsPortalMockup() {
                   <Chip>{lead.cat}</Chip>
                   <h2
                     className="mt-2.5 text-[27px] font-bold leading-[1.16] tracking-tight"
-                    style={{ fontFamily: "var(--font-fraunces)" }}
+                    style={{ fontFamily: "var(--font-garamond)" }}
                   >
                     {lead.title}
                   </h2>

@@ -29,36 +29,42 @@ export interface HubObject {
  * These four objects are the navigation. There is no menu behind them.
  *
  * Each one stands for the section it opens: the half-carved statue for the
- * person still being made, the workbench for what has been finished on it, the
- * rune stone for what he knows, and the signpost for how to reach him.
+ * craft that is never quite finished, the workbench for what has been made on
+ * it, and — for now — the rune stone and the signpost standing in on About and
+ * Contact until the totem pole and the gapura arrive.
+ *
+ * Ids are named for the route, not the model. They were named for the object
+ * once, and swapping a model then left an entry called `patung` holding a rune
+ * stone.
  */
 export const HUB: HubObject[] = [
   {
-    id: "patung",
-    model: "/models/patung-setengah.glb",
+    id: "about",
+    // Placeholder. Waiting on a totem pole.
+    model: "/models/batu-rune.glb",
     href: "/about",
     label: "About",
     caption: "Who works here",
     nx: -0.58,
     ny: 0.44,
-    scale: 0.3,
-    compact: { nx: -0.46, ny: 0.62, scale: 0.19 },
-    tilt: [0.06, 0.55, -0.04],
+    scale: 0.26,
+    compact: { nx: -0.46, ny: 0.62, scale: 0.16 },
+    tilt: [0.08, -0.42, 0.05],
   },
   {
-    id: "rune",
-    model: "/models/batu-rune.glb",
+    id: "craft",
+    model: "/models/patung-setengah.glb",
     href: "/craft",
     label: "Craft",
     caption: "What he works with",
     nx: 0.58,
     ny: 0.44,
-    scale: 0.26,
-    compact: { nx: 0.46, ny: 0.62, scale: 0.16 },
-    tilt: [0.08, -0.42, 0.05],
+    scale: 0.3,
+    compact: { nx: 0.46, ny: 0.62, scale: 0.19 },
+    tilt: [0.06, 0.55, -0.04],
   },
   {
-    id: "bench",
+    id: "work",
     model: "/models/meja-kerja.glb",
     href: "/work",
     label: "Work",
@@ -70,7 +76,8 @@ export const HUB: HubObject[] = [
     tilt: [0.14, -0.62, 0.05],
   },
   {
-    id: "signpost",
+    id: "contact",
+    // Placeholder. Waiting on a gapura.
     model: "/models/tiang-penunjuk.glb",
     href: "/contact",
     label: "Contact",

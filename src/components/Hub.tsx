@@ -32,14 +32,6 @@ export function Hub() {
           transition: "opacity 760ms var(--ease-out-expo), transform 1100ms var(--ease-out-expo)",
         }}
       >
-        {/* The top-right corner belongs to the Apple Music player, so the
-            location line sits with the hint at the foot of the page. */}
-        <header className="pointer-events-none absolute inset-x-0 top-0 z-30 px-[var(--shell-pad)] pt-7">
-          <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-muted">
-            {profile.role}
-          </p>
-        </header>
-
         {/* The figure is a 2D illustration, not a model — it carries far more
             character than the model budget could have bought, and it keeps that
             budget for the four objects that are navigation. */}

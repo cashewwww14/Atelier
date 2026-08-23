@@ -41,8 +41,8 @@
 
   --color-rule: #d8d3c5;
 
-  --font-display: var(--font-fraunces), Georgia, serif;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-garamond), Georgia, serif;
+  --font-sans: var(--font-karla), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -85,11 +85,13 @@ body {
 }
 
 @layer utilities {
-  /* Fraunces tightens its optical size at display scale. */
+  /* Garamond carries its own optical proportions and has none of the axes
+     Fraunces exposed — SOFT and WONK are gone rather than left to be ignored.
+     It also sets wider than Fraunces did, so the tracking is eased off from
+     -0.022em to something that does not close the counters up. */
   .font-display {
     font-family: var(--font-display);
-    font-variation-settings: "SOFT" 0, "WONK" 1, "opsz" 40;
-    letter-spacing: -0.022em;
+    letter-spacing: -0.008em;
   }
 
   .text-balance {

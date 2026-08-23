@@ -65,7 +65,10 @@ export function PageShell({
           >
             ←
           </span>
-          <span className="hidden font-mono text-[11px] uppercase tracking-[0.22em] text-muted transition-colors duration-300 group-hover:text-ink sm:inline">
+          {/* Hidden until lg, not sm. The player sits centred along this same
+              band and its left edge only clears this label above about 910px;
+              below that the arrow alone carries the meaning. */}
+          <span className="hidden font-mono text-[11px] uppercase tracking-[0.22em] text-muted transition-colors duration-300 group-hover:text-ink lg:inline">
             {backLabel}
           </span>
         </button>

@@ -178,14 +178,15 @@ export function NowPlaying() {
   if (!mounted) return null;
 
   return (
-    /* Right edge, vertically centred — measured, not guessed. The hub puts an
-       object and a label in all four corners, and a card tall enough to hold a
-       video fouled whichever one it sat beside. The gap between the two bottom
-       labels is 140px; this card is wider than that. The right flank between
-       the Craft label (ends y309) and the Contact label (starts y705) is the
-       one region the composition genuinely leaves open. */
+    /* Top centre. The hub puts an object and a label in all four corners, so
+       every corner and both flanks foul something — measured at 1512x860, the
+       right flank hits Craft, bottom-left hits Work, bottom-right hits
+       Contact. Only the band above the objects is clear, at every width,
+       because nothing in the composition reaches higher than about 110px.
+       The role line used to run along this band; it now sits under the name,
+       which leaves the whole top strip to the player at any width. */
     <div
-      className="pointer-events-auto fixed right-5 top-1/2 z-50 w-[250px] -translate-y-1/2 overflow-hidden rounded-2xl border border-rule bg-surface/85 shadow-[0_1px_2px_rgb(87_75_59_/_0.05),0_16px_40px_-20px_rgb(87_75_59_/_0.35)] backdrop-blur-md"
+      className="pointer-events-auto fixed left-1/2 top-4 z-50 w-[340px] -translate-x-1/2 overflow-hidden rounded-2xl border border-rule bg-surface/85 shadow-[0_1px_2px_rgb(87_75_59_/_0.05),0_16px_40px_-20px_rgb(87_75_59_/_0.35)] backdrop-blur-md"
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
       style={{ transition: "box-shadow 400ms var(--ease-out-expo)" }}
@@ -218,11 +219,10 @@ export function NowPlaying() {
             ))}
           </span>
           <span className="min-w-0 flex-1">
-            {/* Wraps rather than truncates: at this width a single line cut
-                the title to "not a…", which tells the listener nothing. */}
-            <span className="block text-[11.5px] leading-[1.25] text-ink [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden">
-              {music.title}
-            </span>
+            {/* One line. The card is wide enough now that the title fits, and
+                wrapping it across three lines read as a stack of fragments
+                rather than a song. */}
+            <span className="block truncate text-[11.5px] leading-tight text-ink">{music.title}</span>
             <span className="block truncate text-[10px] leading-tight text-muted">{music.artist}</span>
           </span>
           <button

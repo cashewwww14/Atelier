@@ -2,7 +2,7 @@ export const profile = {
   name: "Ahmad Zaky Ash Shidqi",
   shortName: "Zaky",
   role: "Full-stack & Infrastructure Engineer",
-  tagline: "Systems people actually use — not just ones that run on my laptop.",
+  tagline: "Built to hold up outside the workshop.",
   location: "Surabaya, Indonesia",
   email: "zaky.shidqi14@gmail.com",
   github: { handle: "cashewwww14", url: "https://github.com/cashewwww14" },
