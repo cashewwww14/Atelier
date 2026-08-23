@@ -22,10 +22,10 @@ interface Pose {
 }
 
 /** What the object is doing. `arriving` covers the whole retreat, continuously. */
-type Phase = "hub" | "diving" | "swept" | "arriving" | "dismissed";
+type Phase = "hub" | "waiting" | "diving" | "swept" | "arriving" | "dismissed";
 
 /** The named poses themselves, including the two ends of the retreat. */
-type PoseKey = "hub" | "diving" | "swept" | "centred" | "focused" | "dismissed";
+type PoseKey = "hub" | "waiting" | "diving" | "swept" | "centred" | "focused" | "dismissed";
 
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
@@ -121,6 +121,20 @@ function poseFor(
         lambda: 1.6,
         spin: 5.5,
       };
+    case "waiting":
+      // Behind the curtain: held back, faint, drifting a little wider than the
+      // arrangement they will take. Opening the door damps them forward into
+      // `hub`, so the settle is the same motion the rest of the scene uses
+      // rather than a separate entrance animation.
+      return {
+        x: rest.nx * halfW * 1.28,
+        y: rest.ny * halfH * 1.22,
+        z: -5.5,
+        scale: rest.scale * viewportHeight * 0.62,
+        opacity: 0.5,
+        lambda: 1.5,
+        spin: 0,
+      };
     case "dismissed":
       // Falls back and away rather than vanishing on the spot.
       return {
@@ -158,6 +172,8 @@ interface HubItemProps {
   focused: string | null;
   /** Object mid-exit, between the click and the route change. */
   leaving: string | null;
+  /** False while the opening curtain is still up. */
+  entered: boolean;
   /** When the current route arrived; compared per frame against SETTLE_MS. */
   arrivedAt: RefObject<number>;
 }
@@ -187,6 +203,7 @@ export function HubItem({
   onActivate,
   focused,
   leaving,
+  entered,
   arrivedAt,
 }: HubItemProps) {
   const gltf = useGLTF(item.model);
@@ -256,7 +273,9 @@ export function HubItem({
           ? "arriving"
           : isDismissed
             ? "dismissed"
-            : "hub";
+            : entered
+              ? "hub"
+              : "waiting";
 
     const halfW = viewport.width / 2;
     const halfH = viewport.height / 2;
@@ -325,6 +344,9 @@ export function HubItem({
         pose.spin +
         hoverTurn.current +
         (idle ? Math.sin(t * 0.22 + phaseOffset) * 0.06 : 0) +
+        // A slow, continuous turn while the curtain is up — enough to read as
+        // alive without asking to be looked at.
+        (phase === "waiting" ? t * 0.12 + phaseOffset : 0) +
         // Parked scenery turns with the page: a full revolution per 2400px,
         // slow enough to read as the object being circled rather than spun.
         // Weighted by the retreat so it eases in with everything else instead

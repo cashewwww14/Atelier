@@ -58,6 +58,7 @@ interface HubSceneProps {
   onActivate: (item: HubObject) => void;
   focused: string | null;
   leaving: string | null;
+  entered: boolean;
   arrivedAt: RefObject<number>;
 }
 
@@ -67,6 +68,7 @@ export function HubScene({
   onActivate,
   focused,
   leaving,
+  entered,
   arrivedAt,
 }: HubSceneProps) {
   const compact = useIsCompact();
@@ -105,6 +107,7 @@ export function HubScene({
               onActivate={onActivate}
               focused={focused}
               leaving={leaving}
+              entered={entered}
               arrivedAt={arrivedAt}
             />
           ))}

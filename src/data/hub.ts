@@ -26,16 +26,16 @@ export interface HubObject {
 }
 
 /**
- * The four objects are the navigation — there is no menu behind them.
+ * These four objects are the navigation. There is no menu behind them.
  *
- * Each one is the thing its section is about: you step into the workshop to
- * learn who works there, cross the bench to see what was built on it, read the
- * rune stone for what he knows, and follow the signpost to reach him.
+ * Each one stands for the section it opens: the half-carved statue for the
+ * person still being made, the workbench for what has been finished on it, the
+ * rune stone for what he knows, and the signpost for how to reach him.
  */
 export const HUB: HubObject[] = [
   {
-    id: "cabin",
-    model: "/models/kabin-bengkel.glb",
+    id: "patung",
+    model: "/models/patung-setengah.glb",
     href: "/about",
     label: "About",
     caption: "Who works here",

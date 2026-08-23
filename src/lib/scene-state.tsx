@@ -49,7 +49,23 @@ interface SceneState {
   prefetch: (href: string) => void;
   /** True on the hub, where the labels and name belong. */
   onHub: boolean;
+  /**
+   * False until the visitor clicks through the opening curtain.
+   *
+   * Two things hang off this. The objects hold back — further away, dimmer,
+   * turning slowly — so the curtain has something alive behind it instead of a
+   * flat colour, and they settle into the arrangement only once someone has
+   * arrived. And the click itself is the user gesture browsers demand before
+   * any audio may play with sound, which is why the curtain is a door rather
+   * than a timer.
+   */
+  entered: boolean;
+  /** Open the door. Idempotent; the first call is the one that counts. */
+  enterSite: () => void;
 }
+
+/** Fired on `window` when the curtain is opened, so the player can start. */
+export const ENTER_EVENT = "atelier:enter";
 
 /** Beat of stillness after arrival, before the object starts to retreat. */
 export const SETTLE_MS = 380;
@@ -68,6 +84,16 @@ export function SceneProvider({ children }: { children: ReactNode }) {
   const [leaving, setLeaving] = useState<string | null>(null);
   const exitTimer = useRef<number | null>(null);
   const arrivedAt = useRef(0);
+  // Anyone landing straight on a section never sees the curtain, so there is
+  // nothing to open — treat them as already inside.
+  const [entered, setEntered] = useState(() => pathname !== "/");
+
+  const enterSite = useCallback(() => {
+    setEntered((already) => {
+      if (!already) window.dispatchEvent(new Event(ENTER_EVENT));
+      return true;
+    });
+  }, []);
 
   const enter = useCallback(
     (id: string, href: string) => {
@@ -112,8 +138,10 @@ export function SceneProvider({ children }: { children: ReactNode }) {
       enter,
       prefetch,
       onHub: pathname === "/",
+      entered,
+      enterSite,
     }),
-    [pathname, leaving, enter, prefetch],
+    [pathname, leaving, enter, prefetch, entered, enterSite],
   );
 
   return <Context.Provider value={value}>{children}</Context.Provider>;

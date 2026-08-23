@@ -16,7 +16,7 @@ const HubScene = dynamic(() => import("./HubScene").then((m) => m.HubScene), { s
  * change above it.
  */
 export function SceneRoot() {
-  const { focused, leaving, arrivedAt, enter, prefetch } = useScene();
+  const { focused, leaving, arrivedAt, enter, prefetch, entered } = useScene();
   const [hovered, setHovered] = useState<string | null>(null);
 
   // Warm the route the moment the pointer lands on its object. The exit
@@ -43,7 +43,7 @@ export function SceneRoot() {
       <div
         className={[
           "h-full",
-          focused === null && leaving === null ? "pointer-events-auto" : "",
+          focused === null && leaving === null && entered ? "pointer-events-auto" : "",
           hovered ? "cursor-pointer" : "",
         ]
           .filter(Boolean)
@@ -55,6 +55,7 @@ export function SceneRoot() {
           onActivate={(item) => enter(item.id, item.href)}
           focused={focused}
           leaving={leaving}
+          entered={entered}
           arrivedAt={arrivedAt}
         />
       </div>
